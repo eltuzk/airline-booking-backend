@@ -1,11 +1,5 @@
 # 02. Database Design — Airline Booking System
 
-> **Phiên bản tài liệu:** 1.0  
-> **Ngày tạo:** 07/03/2026  
-> **Tác giả:** BA/System Architect  
-
----
-
 ## Mục lục
 
 1. [Mô tả từng bảng](#1-mô-tả-từng-bảng)

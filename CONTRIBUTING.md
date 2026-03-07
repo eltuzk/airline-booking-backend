@@ -1,4 +1,4 @@
-x`# Contributing Guide
+# Contributing Guide
 
 ## Git Workflow
 

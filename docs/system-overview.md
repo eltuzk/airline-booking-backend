@@ -1,12 +1,5 @@
 # 01. System Overview — Airline Booking System
 
-> **Phiên bản tài liệu:** 1.1  
-> **Ngày tạo:** 06/03/2026  
-> **Cập nhật lần cuối:** 07/03/2026 — Bổ sung Redis (Refresh Token, Blacklist, OTP)  
-> **Tác giả:** BA/System Architect  
-
----
-
 ## Mục lục
 
 1. [Mô tả dự án](#1-mô-tả-dự-án)
@@ -69,10 +62,10 @@ Hệ thống có **4 actors** chính:
 
 | Actor | Mô tả | Yêu cầu xác thực |
 |-------|-------|:-----------------:|
-| **Guest** | Người dùng chưa đăng nhập, chỉ có thể xem thông tin công khai | ❌ Không |
-| **Passenger** | Hành khách đã đăng ký tài khoản, có thể đặt vé và quản lý booking | ✅ Có |
-| **Admin** | Quản trị viên hệ thống, có toàn quyền quản lý dữ liệu vận hành | ✅ Có |
-| **System** | Các tiến trình tự động chạy nội bộ (scheduler, event handler, ...) | ✅ Internal |
+| **Guest** | Người dùng chưa đăng nhập, chỉ có thể xem thông tin công khai | Không |
+| **Passenger** | Hành khách đã đăng ký tài khoản, có thể đặt vé và quản lý booking | Có |
+| **Admin** | Quản trị viên hệ thống, có toàn quyền quản lý dữ liệu vận hành | Có |
+| **System** | Các tiến trình tự động chạy nội bộ (scheduler, event handler, ...) | Internal |
 
 ### Chi tiết quyền theo role:
 
@@ -168,8 +161,6 @@ com.airlinebooking/
 ```
 
 ### 5.3 Database — MySQL (17 bảng)
-
-> ⚠️ Bảng `refresh_tokens` được **loại bỏ khỏi MySQL** — thay thế bởi Redis để tối ưu hiệu năng và tự động expire.
 
 ```
 accounts          users             airports
