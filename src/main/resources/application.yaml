@@ -1,3 +1,32 @@
 spring:
   application:
     name: airline-booking-backend
+  datasource:
+    url: jdbc:mysql://localhost:3307/airline_booking
+    username: root
+    password: admin123
+  kafka:
+    bootstrap-servers: ${KAFKA_URL:localhost:9094}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: kafka11
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    topic:
+      notification: notification-topic
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 8080
