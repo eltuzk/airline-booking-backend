@@ -18,7 +18,7 @@ public class RedisServiceImp implements RedisService {
     private RedisTemplate<String, String> redisTemplate;
 
 
-
+    // hàm này
     @Override
     public boolean lockSeat(int flightId, int userId, String seatNumber) {
         // kết thành một định dạng chuỗi ban đầu định dạng
@@ -34,7 +34,13 @@ public class RedisServiceImp implements RedisService {
     }
 
     @Override
-    public boolean isSeatHoldByCurrentUser(int flightID, int userId, String seatNumber) {
-        return false;
+    public boolean isSeatHoldByCurrentUser(int flightId, int userId, String seatNumber) {
+
+        String key = "booking:key:" + flightId + ":seat:" + seatNumber;
+        String value = String.valueOf(userId);
+
+        String userIdCurrent = redisTemplate.opsForValue().get(key);
+
+        return userIdCurrent.equals(value) && userIdCurrent != null;
     }
 }
