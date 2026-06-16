@@ -1,4 +1,4 @@
-package com.airlinebooking.kafka;
+package com.airlinebooking.kafka.producer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

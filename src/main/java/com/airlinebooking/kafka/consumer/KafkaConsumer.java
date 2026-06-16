@@ -1,4 +1,4 @@
-package com.airlinebooking.kafka;
+package com.airlinebooking.kafka.consumer;
 
 import com.airlinebooking.notification.service.NotificationService;
 import org.slf4j.Logger;
