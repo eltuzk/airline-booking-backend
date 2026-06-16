@@ -6,10 +6,7 @@ import com.airlinebooking.booking.service.RedisService;
 import com.airlinebooking.booking.service.imp.RedisServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/seat")
@@ -41,6 +38,32 @@ public class SeatController {
 
 
     }
+
+
+    @DeleteMapping("/unlock")
+    public ResponseEntity<?> unlockSeat(@RequestBody LockSeatRequest lockSeatRequest){
+        Integer currentUserId = 1;      // tạm thời set cứng id của khách hàng vì chưa làm xong
+        boolean isUnlocked = redisService.unlockSeat(lockSeatRequest.getFlightId(), currentUserId, lockSeatRequest.getSeatNumber());
+
+
+
+
+        BaseResponse baseResponse = new BaseResponse();
+
+        if(isUnlocked){
+            baseResponse.setCode(200);
+            baseResponse.setMessage("Đã nhả ghế");
+            return ResponseEntity.ok(baseResponse);
+        } else {
+            baseResponse.setCode(400);
+            baseResponse.setMessage("Không thể nhả ghế hoặc ghế đã hết hạn");
+            return ResponseEntity.badRequest().body(baseResponse);
+        }
+
+
+
+    }
+
 
 
 }
