@@ -2,6 +2,6 @@ spring:
   application:
     name: airline-booking-backend
   datasource:
-    url: jdbc:mysql://localhost:3307/airline-booking
+    url: jdbc:mysql://localhost:3307/airline_booking
     username: root
     password: admin123
