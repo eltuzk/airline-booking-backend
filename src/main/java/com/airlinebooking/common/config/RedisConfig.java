@@ -7,12 +7,13 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
 @Configuration
 public class RedisConfig {
-    @Value("${spring.datasource.data.redis.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
-    @Value("${spring.datasource.data.redis.port}")
+    @Value("${spring.data.redis.port}")
     private Integer port;
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
@@ -23,21 +24,34 @@ public class RedisConfig {
 
     }
     @Bean
-    public RedisTemplate<String, String> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate() {
 
-        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();//Tạo template kiểu String -> String.
-        redisTemplate.setConnectionFactory(redisConnectionFactory());// Gắn connection factory đang có
+        RedisTemplate<String, Object> redisTemplate =
+                new RedisTemplate<>();
 
-        StringRedisSerializer serializer = new  StringRedisSerializer(); // Dùng serializer string thống nhất
-        redisTemplate.setKeySerializer(serializer); // Serialize Redis key dạng text
-        redisTemplate.setValueSerializer(serializer); // Serializer value thường dạng text
-        redisTemplate.setHashKeySerializer(serializer); //  Serializer hash field dạng text, ví dụ "101"
-        redisTemplate.setHashValueSerializer(serializer); // Serializer hash value dạng text, ví dụ "3"
+        redisTemplate.setConnectionFactory(
+                redisConnectionFactory()
+        );
 
-        redisTemplate.afterPropertiesSet(); // Hoàn tất cấu hình bean
+        redisTemplate.setKeySerializer(
+                new StringRedisSerializer()
+        );
 
-        return  redisTemplate; // Trả bean cho spring dùng
+        redisTemplate.setValueSerializer(
+                new GenericJackson2JsonRedisSerializer()
+        );
 
+        redisTemplate.setHashKeySerializer(
+                new StringRedisSerializer()
+        );
+
+        redisTemplate.setHashValueSerializer(
+                new GenericJackson2JsonRedisSerializer()
+        );
+
+        redisTemplate.afterPropertiesSet();
+
+        return redisTemplate;
     }
 
 }
