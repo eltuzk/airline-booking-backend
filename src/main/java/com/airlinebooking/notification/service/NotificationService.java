@@ -37,4 +37,8 @@ public class NotificationService {
         String body = BaggageNotificationTemplate.build(message);
         emailSender.send(email, "Thông báo hành lý", body);
     }
+    public void sendPassTemp(String email,String fullName ,String passTemp){
+        String body = AccountCreatedTemplate.build(fullName,passTemp);
+        emailSender.send(email, "Đăng ký tài khoản thành công", body);
+    }
 }
