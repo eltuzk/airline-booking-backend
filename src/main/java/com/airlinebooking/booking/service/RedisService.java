@@ -2,8 +2,12 @@ package com.airlinebooking.booking.service;
 
 public interface RedisService {
     //Hàm lock ghế khi mà được chọn
-    public boolean lockSeat(int flightId, int userId, String seatNumber);
+    public boolean lockSeat(Integer flightId, Integer userId, String seatNumber);
 
     //Hàm check xem ghế hiện tại có phải là chur nhân đó không (TH người đó refesh lại trang)
-    public boolean isSeatHoldByCurrentUser(int flightID, int userId, String seatNumber);
+    public boolean isSeatHoldByCurrentUser(Integer flightID, Integer userId, String seatNumber);
+
+
+    // hàm unclock ghế khi người dùng sau khi qua bước chọn thì lại chọn BACK QUAY LẠI không chọn ghế đó nữa
+    public boolean unlockSeat(Integer flightId, Integer userId, String seatNumber);
 }

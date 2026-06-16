@@ -3,8 +3,10 @@ package com.airlinebooking.booking.service.imp;
 import com.airlinebooking.booking.service.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
@@ -20,10 +22,10 @@ public class RedisServiceImp implements RedisService {
 
     // hàm này
     @Override
-    public boolean lockSeat(int flightId, int userId, String seatNumber) {
+    public boolean lockSeat(Integer flightId, Integer userId, String seatNumber) {
         // kết thành một định dạng chuỗi ban đầu định dạng
         // đó sẽ là key và value là id người dùng
-        String key = "booking:key:" + flightId + ":seat:" + seatNumber;
+        String key = "booking:flightId:" + flightId + ":seat:" + seatNumber;
         String value = String.valueOf(userId);
 
         // sau đó sẽ check và lưu trên redis, lưu thành công trả true (và trên redis sẽ lưu key và value), và ngược lại
@@ -34,13 +36,37 @@ public class RedisServiceImp implements RedisService {
     }
 
     @Override
-    public boolean isSeatHoldByCurrentUser(int flightId, int userId, String seatNumber) {
+    public boolean isSeatHoldByCurrentUser(Integer flightId, Integer userId, String seatNumber) {
 
-        String key = "booking:key:" + flightId + ":seat:" + seatNumber;
+        String key = "booking:flightId:" + flightId + ":seat:" + seatNumber;
         String value = String.valueOf(userId);
 
         String userIdCurrent = redisTemplate.opsForValue().get(key);
 
-        return userIdCurrent.equals(value) && userIdCurrent != null;
+        return  userIdCurrent != null && userIdCurrent.equals(value);
+    }
+
+    @Override
+    public boolean unlockSeat(Integer flightId, Integer userId, String seatNumber) {
+
+        String key = "booking:flightId:" + flightId + ":seat:" + seatNumber;
+        String value = String.valueOf(userId);
+
+
+        // tạo một đoạn script đẻ redis khi thực hiện đoạn này sẽ khóa tất cả cuwar khác lại
+        String lauScript =  "if redis.call('get', KEYS[1]) then" +
+                            "   return redis.call('delete', KEYS[1])" +
+                            "else" +
+                            "   return 0" +
+                            "end";
+
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText(lauScript);
+        redisScript.setResultType(Long.class);
+
+        Long result =  redisTemplate.execute(redisScript, List.of(key), value);
+
+        return result != null && result == 1L;
+
     }
 }
