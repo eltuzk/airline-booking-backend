@@ -54,11 +54,13 @@ public class RedisServiceImp implements RedisService {
 
 
         // tạo một đoạn script đẻ redis khi thực hiện đoạn này sẽ khóa tất cả cuwar khác lại
-        String lauScript =  "if redis.call('get', KEYS[1]) == ARGV[1] then" +
-                            "   return redis.call('delete', KEYS[1])" +
-                            "else" +
-                            "   return 0" +
-                            "end";
+        String lauScript =  """
+                        if redis.call('get', KEYS[1]) == ARGV[1] then
+                            return redis.call('del', KEYS[1])
+                        else
+                            return 0
+                        end
+                        """;
 
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText(lauScript);
