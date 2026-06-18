@@ -22,12 +22,12 @@ public class SeatEntity {
 
     private String seatType;
 
-    private String status;
+    private String seatStatus;
 
-    private Double priceMultiplier;
+    private BigDecimal priceMultiplier;
 
     @Version
-    private BigDecimal version;
+    private Long version;
 
 
 
