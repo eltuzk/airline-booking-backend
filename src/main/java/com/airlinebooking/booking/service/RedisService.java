@@ -1,5 +1,7 @@
 package com.airlinebooking.booking.service;
 
+import java.util.Set;
+
 public interface RedisService {
     //Hàm lock ghế khi mà được chọn
     public boolean lockSeat(Integer flightId, Integer userId, String seatNumber);
@@ -10,4 +12,7 @@ public interface RedisService {
 
     // hàm unclock ghế khi người dùng sau khi qua bước chọn thì lại chọn BACK QUAY LẠI không chọn ghế đó nữa
     public boolean unlockSeat(Integer flightId, Integer userId, String seatNumber);
+
+
+    public Set<String> scanKeys(String pattern);
 }
