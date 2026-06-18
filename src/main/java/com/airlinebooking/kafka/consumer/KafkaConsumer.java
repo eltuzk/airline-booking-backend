@@ -63,14 +63,6 @@ public class KafkaConsumer {
                             json.get("message").asText()
                     );
                     break;
-                case "REGISTER":
-                    notificationService.sendPassTemp(
-                            email,
-                            json.get("fullName").asText(),
-                            json.get("password").asText()
-
-                    );
-                    break;
                 default:
                     System.out.println("Unknown notification type: " + type);
             }
