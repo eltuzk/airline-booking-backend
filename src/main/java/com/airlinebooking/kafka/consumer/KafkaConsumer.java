@@ -1,5 +1,7 @@
 package com.airlinebooking.kafka.consumer;
 
+import com.airlinebooking.common.exception.ApiException;
+import com.airlinebooking.common.exception.ErrorCode;
 import com.airlinebooking.notification.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +66,10 @@ public class KafkaConsumer {
                     );
                     break;
                 default:
-                    System.out.println("Unknown notification type: " + type);
+                    throw new ApiException(ErrorCode.PROCESSING_KAFKA_MESSAGE);
             }
         } catch (Exception e) {
-            logger.error("Error parsing message", e);
+            throw new ApiException(ErrorCode.INVALID_MESSAGE);
         }
     }
 }

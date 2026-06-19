@@ -24,7 +24,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**"
+                                "/auth/**", "/kafka/**"
                         ).permitAll()
 
                         .anyRequest()

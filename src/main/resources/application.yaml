@@ -3,9 +3,9 @@ spring:
     name: airline-booking-backend
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3308/airline_booking}
-    username: ${DB_USERNAME:airline_user}
-    password: ${DB_PASSWORD:airline_pass}
+    url: ${DB_URL:jdbc:mysql://localhost:3307/airline_booking}
+    username: root
+    password: admin123
 
   data:
     redis:
