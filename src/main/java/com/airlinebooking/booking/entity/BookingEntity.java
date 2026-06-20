@@ -23,7 +23,7 @@ public class BookingEntity {
 
     private String bookingCode; // Mã PNR (VD: VJ123456)
 
-    private Integer userId;
+    private Integer userId;     // dữ Integer để add vào không vị lỗi
 
     private String contactName;
 

@@ -11,7 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity(name = "flights")
+@Entity
+@Table(name = "flights")
 @Getter
 @Setter
 @AllArgsConstructor

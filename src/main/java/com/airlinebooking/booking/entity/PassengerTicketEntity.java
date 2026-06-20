@@ -8,8 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
-@Entity(name = "passenger_tickets")
+@Entity
+@Table(name = "passenger_tickets")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -32,7 +34,10 @@ public class PassengerTicketEntity {
     private PassengerEntity passenger;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seat_id", unique = true)
+    @JoinColumn(name = "seat_id")
     private SeatEntity seat;
+
+    @OneToMany(mappedBy = "ticket")
+    private List<TicketBaggageEntity> ticketBaggages;
 
 }

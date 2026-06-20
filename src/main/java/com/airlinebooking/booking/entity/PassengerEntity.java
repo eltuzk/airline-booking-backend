@@ -9,7 +9,8 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity(name = "passengers")
+@Entity
+@Table(name = "passengers")
 @Getter
 @Setter
 @NoArgsConstructor

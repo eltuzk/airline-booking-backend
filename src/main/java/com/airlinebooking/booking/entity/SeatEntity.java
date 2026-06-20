@@ -2,15 +2,20 @@ package com.airlinebooking.booking.entity;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Entity(name = "seats")
+@Entity
+@Table(name = "seats")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SeatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
