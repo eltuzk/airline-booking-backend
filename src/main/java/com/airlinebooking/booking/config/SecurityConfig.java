@@ -18,6 +18,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers("/seat/**").permitAll();
 
+                    request.requestMatchers("/baggages").permitAll();
+
+                    request.requestMatchers("/flights/**").permitAll();
+
+                    request.requestMatchers("/bookings/**").permitAll();
+
 
                     request.anyRequest().authenticated();
 

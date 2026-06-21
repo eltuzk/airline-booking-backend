@@ -6,17 +6,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-public class CentralException {
+public class GlobalExceptionHandler {
 
     // bắt tất cả lỗi kế thừa từ AppException
     @ExceptionHandler(AppException.class)
     public ResponseEntity<BaseResponse> handAppException(AppException e){
         BaseResponse baseResponse = new BaseResponse();
 
-        baseResponse.setCode(e.getCode());
-        baseResponse.setMessage(e.getMessage());
+        ErrorCode errorCode = e.getErrorCode();
+        baseResponse.setCode(errorCode.getCode());
+        baseResponse.setMessage(errorCode.getMessage());
 
-        return ResponseEntity.status(e.getCode()).body(baseResponse);
+        return ResponseEntity.status(errorCode.getStatusCode()).body(baseResponse);
     }
 
 
@@ -24,10 +25,12 @@ public class CentralException {
     public ResponseEntity<BaseResponse> handleUnwantedException(Exception e){
         BaseResponse baseResponse = new BaseResponse();
 
-        baseResponse.setCode(500);
-        baseResponse.setMessage("Lỗi hệ thống không xác định được: " + e.getMessage());
 
-        return ResponseEntity.status(500).body(baseResponse);
+
+        baseResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        baseResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage() + e.getMessage());
+
+        return ResponseEntity.status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode()).body(baseResponse);
 
     }
 
