@@ -88,4 +88,15 @@ public class RedisServiceImp implements RedisService {
 
         return result;
     }
+
+    @Override
+    public void extendSeatLock(Integer flightId, String seatNumber, long extendTimeInMinutes) {
+
+        //taoj key tìm chỗ ngồi
+        String key = "booking:flight:" + flightId + ":seat:" + seatNumber;
+
+        // nạp lại thời gian tồn tại trên redis
+        redisTemplate.expire(key, extendTimeInMinutes, TimeUnit.MINUTES);
+
+    }
 }

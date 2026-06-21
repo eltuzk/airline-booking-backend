@@ -15,4 +15,7 @@ public interface RedisService {
 
 
     public Set<String> scanKeys(String pattern);
+
+    //Gia hanj thời gian redis cho chỗ ngồi đó (dùng expire để bơm thêm)
+    public void extendSeatLock(Integer flightId, String seatNumber, long extendTimeInMinutes);
 }

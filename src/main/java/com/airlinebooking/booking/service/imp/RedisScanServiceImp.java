@@ -1,5 +1,7 @@
 package com.airlinebooking.booking.service.imp;
 
+import com.airlinebooking.booking.exceptions.AppException;
+import com.airlinebooking.booking.exceptions.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,7 +57,9 @@ public class RedisScanServiceImp implements RedisCallback<Set<String>> {
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+
+            throw new AppException(ErrorCode.REDIS_OPERATION_WHEN_SCAN);
+
 
         } finally {
             // dù lỗi hay không cũng phải đóng cursor nêu không tràn RAM
