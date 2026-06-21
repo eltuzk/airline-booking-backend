@@ -1,4 +1,10 @@
 package com.airlinebooking.booking.service;
 
-public class BaggageService {
+import com.airlinebooking.booking.payload.response.BaggageResponse;
+
+import java.util.List;
+
+public interface BaggageService {
+
+    public List<BaggageResponse> getAllBaggages();
 }

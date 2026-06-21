@@ -1,6 +1,8 @@
 package com.airlinebooking.booking.service.imp;
 
 import com.airlinebooking.booking.entity.SeatEntity;
+import com.airlinebooking.booking.exceptions.AppException;
+import com.airlinebooking.booking.exceptions.ErrorCode;
 import com.airlinebooking.booking.mapper.SeatMapper;
 import com.airlinebooking.booking.payload.response.SeatResponse;
 import com.airlinebooking.booking.repository.SeatRepository;
@@ -121,23 +123,23 @@ public class SeatServiceImp implements SeatService {
                 stringRedisTemplate.opsForValue().set(staticSeatMapKeys, jsonToCache, HELD_STATIC_SEAT_MAP, TimeUnit.HOURS);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            // cách này để tránh nếu redis bị sập
-            if(seatResponseList.isEmpty()){
-                System.out.println("gọi db");
+            throw new AppException(ErrorCode.REDIS_OPERATION_FAILED);
 
-                List<SeatEntity> seatEntityList = new ArrayList<>();
-
-                seatEntityList = seatRepository.findByFlight_FlightId(flightId);
-
-
-                // mapper snag
-                for(SeatEntity s : seatEntityList){
-                    SeatResponse seatResponse = seatMapper.toResponse(s);
-
-                    seatResponseList.add(seatResponse);
-                }
-            }
+//            if(seatResponseList.isEmpty()){
+//                System.out.println("gọi db");
+//
+//                List<SeatEntity> seatEntityList = new ArrayList<>();
+//
+//                seatEntityList = seatRepository.findByFlight_FlightId(flightId);
+//
+//
+//                // mapper snag
+//                for(SeatEntity s : seatEntityList){
+//                    SeatResponse seatResponse = seatMapper.toResponse(s);
+//
+//                    seatResponseList.add(seatResponse);
+//                }
+//            }
         }
 
         return seatResponseList;
