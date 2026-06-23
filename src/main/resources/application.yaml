@@ -9,3 +9,19 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+
+# VNPAY CONFIGURATION
+vnpay:
+  # Mã website của bạn trên hệ thống VNPay (Terminal ID)
+  tmnCode: 2W3X4Y5Z
+
+  # Chuỗi bí mật để ký bảo mật (Tuyệt đối không để lộ ra ngoài Frontend)
+  hashSecret: JJDKLSOENNDKCLSLDNEIWOQPXMMZNDJK
+
+  # Đường dẫn API của VNPay để mình bắn request sang
+  payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+
+  # Đường link VNPay sẽ "đá" khách hàng về lại web của bạn sau khi quét mã QR xong
+  # (Bạn sửa lại cổng 8080 nếu web của bạn chạy cổng khác nhé)
+  returnUrl: http://localhost:8080/api/payments/vnpay-return
