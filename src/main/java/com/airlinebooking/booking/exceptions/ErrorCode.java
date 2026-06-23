@@ -18,6 +18,7 @@ public enum ErrorCode {
     SEAT_NOT_FOUND(4003, "Không tìm thấy ghế trên hệ thống", HttpStatus.NOT_FOUND),
     FLIGHT_NOT_FOUND(4004, "Chuyến bay không tồn tại", HttpStatus.NOT_FOUND),
     BAGGAGE_NOT_FOUND(4007, "Không tìm thấy mức hành lý này trong kho", HttpStatus.NOT_FOUND),
+    BOOKING_NOT_FOUND(4008, "Không tìm thấy booking này", HttpStatus.BAD_REQUEST),
 
     BOOKING_PROCESSING_FAILED(5001, "Lỗi khi tạo mã đặt chỗ, vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
     REDIS_OPERATION_FAILED(5002, "Lỗi kết nối Redis khi giữ ghế", HttpStatus.INTERNAL_SERVER_ERROR),
