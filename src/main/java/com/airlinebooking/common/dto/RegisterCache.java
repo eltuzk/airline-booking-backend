@@ -13,5 +13,15 @@ public class RegisterCache {
 
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String fullName;
+
+    private String role;
+
+    private String phone;
+
 
 }

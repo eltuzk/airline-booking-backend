@@ -1,5 +1,6 @@
-package com.airlinebooking.kafka;
+package com.airlinebooking.kafka.controller;
 
+import com.airlinebooking.kafka.KafkaProducer;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

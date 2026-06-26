@@ -11,8 +11,8 @@ import lombok.Setter;
 @Setter
 public class RegisterRequest {
 
-    @Email(message = "Email không đúng định dạng")
-    @NotBlank(message = "Email không được để trống")
+    @Email(message = "EMAIL_INVALID")
+    @NotBlank(message = "EMAIL_REQUIRED")
     private String email;
 
     @NotBlank(message = "Tên không được để trống")

@@ -1,17 +1,12 @@
 package com.airlinebooking.auth.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity(name = "users")
-@Getter
-@Setter
+@Data
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,4 +21,14 @@ public class UserEntity {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String status;
+
+    /** Đặt thành true khi tài khoản bị khóa vĩnh viễn do đăng nhập sai nhiều lần liên tiếp. */
+    private Boolean permanentlyLocked;
+
+    /** Thời điểm tài khoản bị khóa vĩnh viễn. */
+    private LocalDateTime permanentlyLockedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private RoleEntity role;
 }

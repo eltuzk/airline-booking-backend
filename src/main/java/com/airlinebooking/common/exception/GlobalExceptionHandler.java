@@ -1,6 +1,7 @@
 package com.airlinebooking.common.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -19,4 +20,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex) {
+
+        String enumKey = ex.getBindingResult()
+                .getFieldError()
+                .getDefaultMessage();
+
+        ErrorCode errorCode = ErrorCode.valueOf(enumKey);
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(
+                        ErrorResponse.builder()
+                                .code(errorCode.getCode())
+                                .message(errorCode.getMessage())
+                                .build()
+                );
+
+    }
 }

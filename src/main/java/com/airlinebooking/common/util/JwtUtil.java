@@ -1,6 +1,6 @@
 package com.airlinebooking.common.util;
 
-import com.airlinebooking.auth.dto.response.UserDTO;
+import com.airlinebooking.common.dto.UserDTO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -21,10 +21,11 @@ public class JwtUtil {
     private final int expriedAccessTime = 15 * 60 * 1000;
     private final int expriedRefreshTime = 7 * 24 * 60 * 60 * 1000;
     public String generateAccessToken(UserDTO user) {
+        String role = user.getRole();
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));
         Date currentDate = new Date();
         Date futureDate =  new Date(currentDate.getTime() + expriedAccessTime);
-        return Jwts.builder().subject(String.valueOf(user.getUserId())).claim("email", user.getEmail()).expiration(futureDate).signWith(key).compact();
+        return Jwts.builder().subject(String.valueOf(user.getUserId())).claim("email", user.getEmail()).claim("role", role).expiration(futureDate).signWith(key).compact();
     }
     public String generateRefreshToken(UserDTO user) {
         SecretKey key  = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshKey));
@@ -32,6 +33,14 @@ public class JwtUtil {
         Date currentDate = new Date();
         Date futureDate =  new Date(currentDate.getTime() + expriedRefreshTime);
         return Jwts.builder().subject(String.valueOf(user.getUserId())).id(jti).expiration(futureDate).signWith(key).compact();
+    }
+
+    public String generateChangePasswordToken(String email) {
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));
+        Date currentDate = new Date();
+        Date futureDate =  new Date(currentDate.getTime() + expriedAccessTime);
+        return Jwts.builder().subject(email).claim("type", "CHANGE_PASS").expiration(futureDate).signWith(key).compact();
+
     }
     public String decodeToken(String token){
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));

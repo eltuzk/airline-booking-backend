@@ -1,4 +1,4 @@
-package com.airlinebooking.auth.dto.response;
+package com.airlinebooking.common.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,5 +8,6 @@ import lombok.Setter;
 public class UserDTO {
     private Long userId;
     private String email;
+    private String role;
 
 }

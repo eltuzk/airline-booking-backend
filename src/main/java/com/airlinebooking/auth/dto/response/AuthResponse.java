@@ -9,4 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 public class AuthResponse {
     private String message;
+    private boolean forceChangePass;
+    private  String accessToken;
+    private String refreshToken;
 }
