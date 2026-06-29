@@ -32,7 +32,14 @@ public class JwtUtil {
         String jti = UUID.randomUUID().toString();
         Date currentDate = new Date();
         Date futureDate =  new Date(currentDate.getTime() + expriedRefreshTime);
-        return Jwts.builder().subject(String.valueOf(user.getUserId())).id(jti).expiration(futureDate).signWith(key).compact();
+        return Jwts.builder()
+                .subject(String.valueOf(user.getUserId()))
+                .id(jti)
+                .claim("email", user.getEmail())
+                .claim("role", user.getRole())
+                .expiration(futureDate)
+                .signWith(key)
+                .compact();
     }
 
     public String generateChangePasswordToken(String email) {
@@ -41,6 +48,13 @@ public class JwtUtil {
         Date futureDate =  new Date(currentDate.getTime() + expriedAccessTime);
         return Jwts.builder().subject(email).claim("type", "CHANGE_PASS").expiration(futureDate).signWith(key).compact();
 
+    }
+
+    public String generateResetPasswordToken(String email) {
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));
+        Date currentDate = new Date();
+        Date futureDate = new Date(currentDate.getTime() + expriedAccessTime);
+        return Jwts.builder().subject(email).claim("type", "RESET_PASS").expiration(futureDate).signWith(key).compact();
     }
     public String decodeToken(String token){
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessKey));

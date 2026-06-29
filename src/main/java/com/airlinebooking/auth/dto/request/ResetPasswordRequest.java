@@ -6,10 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class ChangePassRequest {
-    @NotBlank(message = "PASSWORD_REQUIRED")
-    private String oldPassword;
-
+public class ResetPasswordRequest {
     @NotBlank(message = "PASSWORD_REQUIRED")
     @Size(min = 8, message = "PASSWORD_INVALID")
     @Pattern(

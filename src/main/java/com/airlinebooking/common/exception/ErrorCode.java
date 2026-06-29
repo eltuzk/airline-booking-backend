@@ -23,7 +23,12 @@ public enum ErrorCode {
     ACCOUNT_ALREADY_ACTIVE(HttpStatus.CONFLICT, "USER_011", "This account is already active on another device"),
     ACCOUNT_TEMPORARILY_LOCKED(HttpStatus.FORBIDDEN, "AUTH_001", "Tài khoản tạm thời bị khóa do đăng nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút"),
     ACCOUNT_PERMANENTLY_LOCKED(HttpStatus.FORBIDDEN, "AUTH_002", "Tài khoản đã bị khóa vĩnh viễn"),
-    INVALID_LOGIN_ATTEMPT_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "AUTH_003", "Vượt quá số lần đăng nhập sai cho phép");
+    INVALID_LOGIN_ATTEMPT_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "AUTH_003", "Vượt quá số lần đăng nhập sai cho phép"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_012", "Không tìm thấy tài khoản"),
+    OTP_REQUIRED(HttpStatus.BAD_REQUEST, "OTP_001", "Mã OTP không được để trống"),
+    OTP_INVALID(HttpStatus.BAD_REQUEST, "OTP_002", "Mã OTP không đúng hoặc đã hết hạn"),
+    OLD_PASSWORD_WRONG(HttpStatus.BAD_REQUEST, "USER_013", "Mật khẩu hiện tại không đúng"),
+    TOKEN_TYPE_INVALID(HttpStatus.FORBIDDEN, "AUTH_004", "Loại Token không hợp lệ");
     private final HttpStatus status;
     private final String code;
     private final String message;

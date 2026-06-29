@@ -1,8 +1,12 @@
 package com.airlinebooking.auth.services.imp;
 
 import com.airlinebooking.auth.dto.request.ChangeFirstPassRequest;
+import com.airlinebooking.auth.dto.request.ChangePassRequest;
+import com.airlinebooking.auth.dto.request.ForgotPasswordRequest;
 import com.airlinebooking.auth.dto.request.LoginRequest;
 import com.airlinebooking.auth.dto.request.RegisterRequest;
+import com.airlinebooking.auth.dto.request.ResetPasswordRequest;
+import com.airlinebooking.auth.dto.request.VerifyOtpRequest;
 import com.airlinebooking.auth.dto.response.AuthResponse;
 import com.airlinebooking.auth.dto.response.ChangePassResponse;
 import com.airlinebooking.auth.entity.RoleEntity;
@@ -14,6 +18,7 @@ import com.airlinebooking.auth.services.AuthenticationServices;
 import com.airlinebooking.cache.services.RedisService;
 import com.airlinebooking.common.constans.RedisKeyConstants;
 import com.airlinebooking.common.dto.RegisterCache;
+import com.airlinebooking.common.dto.UserDTO;
 import com.airlinebooking.common.exception.ErrorCode;
 import com.airlinebooking.common.exception.ResourceNotFoundException;
 import com.airlinebooking.common.util.JwtUtil;
@@ -61,7 +66,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
         String tempPassword = generateTempPassword();
         String hashTempPassword = passwordEncoder.encode(tempPassword);
-
+// Lưu redis
         RegisterCache registerCache =
                 RegisterCache.builder()
                         .firstName(newUser.getFirstName())
@@ -174,23 +179,32 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 .build();
         redisService.set(sessionKey, session, RedisKeyConstants.SESSION_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
-        String accessToken = jwtUtil.generateAccessToken(UserMapper.mapToDTO(userEntity));
+        UserDTO userDTO = UserMapper.mapToDTO(userEntity);
+        String accessToken = jwtUtil.generateAccessToken(userDTO);
+        String refreshToken = jwtUtil.generateRefreshToken(userDTO);
+
+        // Lưu jti của refresh token vào Redis whitelist (7 ngày)
+        Claims refreshClaims = jwtUtil.parseToken(refreshToken);
+        redisService.set(
+                RedisKeyConstants.REFRESH_TOKEN + userEntity.getUserId(),
+                refreshClaims.getId(),
+                RedisKeyConstants.REFRESH_TOKEN_DAYS,
+                TimeUnit.DAYS
+        );
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
     @Override
     public void logout(HttpServletRequest request) {
-        String dataAuthen = request.getHeader("Authorization");
-        if (dataAuthen == null || !dataAuthen.startsWith("Bearer ")) {
-            throw new ResourceNotFoundException(ErrorCode.INVALID_TOKEN);
-        }
-        String token = dataAuthen.substring(7);
+        String token = extractBearerToken(request);
         Claims claims = jwtUtil.parseAccessToken(token);
         String userId = claims.getSubject();
         redisService.delete(RedisKeyConstants.LOGIN_SESSION + userId);
+        redisService.delete(RedisKeyConstants.REFRESH_TOKEN + userId);
     }
 
     private String getClientIp(HttpServletRequest request) {
@@ -203,11 +217,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
     @Override
     public ChangePassResponse firstChangePass(ChangeFirstPassRequest changePassRequest, HttpServletRequest request) {
-        RoleEntity role = roleRepository.findByRoleName("ROLE_USER").orElseThrow(
-                () -> new ResourceNotFoundException(ErrorCode.INVALID_ROLE)
-        );
-        String dataAuthen = request.getHeader("Authorization");
-        String token = dataAuthen.substring(7);
+        String token = extractBearerToken(request);
         Claims claim = jwtUtil.parseAccessToken(token);
         String type = claim.get("type").toString();
         if(!"CHANGE_PASS".equals(type)) {
@@ -222,6 +232,10 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         if(!changePassRequest.getNewPass().equals(changePassRequest.getConfirmPass())) {
             throw new ResourceNotFoundException(ErrorCode.PASSWORD_CONFIRMATION_MISMATCH);
         }
+
+        RoleEntity role = roleRepository.findByRoleName("ROLE_USER").orElseThrow(
+                () -> new ResourceNotFoundException(ErrorCode.INVALID_ROLE)
+        );
 
         UserEntity user = new  UserEntity();
         user.setEmail(pendingUser.getEmail());
@@ -291,12 +305,196 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         throw new ResourceNotFoundException(ErrorCode.ACCOUNT_TEMPORARILY_LOCKED);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Đổi mật khẩu (tài khoản đang đăng nhập)
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public ChangePassResponse changePassword(ChangePassRequest changePassRequest, HttpServletRequest httpRequest) {
+        // Lấy userId từ access token
+        String token = extractBearerToken(httpRequest);
+        Claims claims = jwtUtil.parseAccessToken(token);
+        String userId = claims.getSubject();
+
+        UserEntity user = userRepository.findById(Long.parseLong(userId)).orElseThrow(
+                () -> new ResourceNotFoundException(ErrorCode.LOGIN_FAIL)
+        );
+
+        // Xác minh mật khẩu cũ
+        if (!passwordEncoder.matches(changePassRequest.getOldPassword(), user.getPasswordHash())) {
+            throw new ResourceNotFoundException(ErrorCode.OLD_PASSWORD_WRONG);
+        }
+
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu khớp nhau
+        if (!changePassRequest.getNewPassword().equals(changePassRequest.getConfirmPass())) {
+            throw new ResourceNotFoundException(ErrorCode.PASSWORD_CONFIRMATION_MISMATCH);
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(changePassRequest.getNewPassword()));
+        userRepository.save(user);
+
+        // Huỷ session và refresh token — người dùng cần đăng nhập lại
+        redisService.delete(RedisKeyConstants.LOGIN_SESSION + userId);
+        revokeRefreshToken(userId);
+
+        return ChangePassResponse.builder()
+                .message("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Quên mật khẩu — Bước 1: Gửi OTP
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public ChangePassResponse forgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail();
+
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException(ErrorCode.LOGIN_FAIL)
+        );
+
+        if (Boolean.TRUE.equals(user.getPermanentlyLocked())) {
+            throw new ResourceNotFoundException(ErrorCode.ACCOUNT_PERMANENTLY_LOCKED);
+        }
+
+        // Tạo OTP 6 chữ số ngẫu nhiên và lưu vào Redis với TTL 10 phút
+        String otp = String.format("%06d", (int) (Math.random() * 1_000_000));
+        redisService.set(
+                RedisKeyConstants.FOGOT_PASSWORD_OTP + email,
+                otp,
+                RedisKeyConstants.FORGOT_PASSWORD_OTP_MINUTES,
+                TimeUnit.MINUTES
+        );
+
+        // Gửi OTP qua Kafka → NotificationService → Email
+        ObjectNode payload = objectMapper.createObjectNode();
+        payload.put("type", "FORGOT_PASSWORD");
+        payload.put("email", email);
+        payload.put("fullName", user.getFullName());
+        payload.put("otp", otp);
+        kafkaTemplate.send("notification-topic", payload.toString());
+
+        return ChangePassResponse.builder()
+                .message("Mã OTP đã được gửi đến email của bạn. Mã có hiệu lực trong 10 phút.")
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Quên mật khẩu — Bước 2: Xác minh OTP
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public AuthResponse verifyForgotPasswordOtp(VerifyOtpRequest request) {
+        String otpKey = RedisKeyConstants.FOGOT_PASSWORD_OTP + request.getEmail();
+        String storedOtp = (String) redisService.get(otpKey);
+
+        if (storedOtp == null || !storedOtp.equals(request.getOtp())) {
+            throw new ResourceNotFoundException(ErrorCode.OTP_INVALID);
+        }
+
+        // OTP hợp lệ — xóa khỏi Redis để chống dùng lại
+        redisService.delete(otpKey);
+
+        // Cấp Token đặt lại mật khẩu (dùng chung accessKey, type = RESET_PASS)
+        String resetToken = jwtUtil.generateResetPasswordToken(request.getEmail());
+
+        return AuthResponse.builder()
+                .accessToken(resetToken)
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Quên mật khẩu — Bước 3: Đặt lại mật khẩu
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public ChangePassResponse resetPassword(ResetPasswordRequest request, HttpServletRequest httpRequest) {
+        String token = extractBearerToken(httpRequest);
+        Claims claims = jwtUtil.parseAccessToken(token);
+
+        // Kiểm tra loại Token phải là RESET_PASS
+        String type = claims.get("type", String.class);
+        if (!"RESET_PASS".equals(type)) {
+            throw new ResourceNotFoundException(ErrorCode.TOKEN_TYPE_INVALID);
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmPass())) {
+            throw new ResourceNotFoundException(ErrorCode.PASSWORD_CONFIRMATION_MISMATCH);
+        }
+
+        String email = claims.getSubject();
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException(ErrorCode.LOGIN_FAIL)
+        );
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Huỷ session và refresh token nếu có — bắt buộc đăng nhập lại
+        String userIdStr = String.valueOf(user.getUserId());
+        redisService.delete(RedisKeyConstants.LOGIN_SESSION + userIdStr);
+        revokeRefreshToken(userIdStr);
+
+        return ChangePassResponse.builder()
+                .message("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.")
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Tiện ích dùng chung
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Refresh Token
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public AuthResponse refreshToken(HttpServletRequest request) {
+        String token = extractBearerToken(request);
+        Claims claims = jwtUtil.parseToken(token); // dùng refreshKey để parse
+
+        String userId = claims.getSubject();
+        String jti = claims.getId();
+
+        // Kiểm tra jti trong Redis whitelist
+        String storedJti = (String) redisService.get(RedisKeyConstants.REFRESH_TOKEN + userId);
+        if (storedJti == null || !storedJti.equals(jti)) {
+            throw new ResourceNotFoundException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // Tạo UserDTO từ claims của refresh token (không cần query DB)
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(Long.parseLong(userId));
+        userDTO.setEmail(claims.get("email", String.class));
+        userDTO.setRole(claims.get("role", String.class));
+
+        String newAccessToken = jwtUtil.generateAccessToken(userDTO);
+
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .build();
+    }
+
+    /** Thu hồi refresh token của userId khỏi Redis whitelist. */
+    private void revokeRefreshToken(String userId) {
+        redisService.delete(RedisKeyConstants.REFRESH_TOKEN + userId);
+    }
+
+    /** Trích xuất Bearer Token từ header Authorization, throw nếu không hợp lệ. */
+    private String extractBearerToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            throw new ResourceNotFoundException(ErrorCode.INVALID_TOKEN);
+        }
+        return header.substring(7);
+    }
+
     /**
      * Xóa tất cả các key Redis liên quan đến đăng nhập sai cho email tương ứng.
      * Được gọi sau khi đăng nhập thành công để khôi phục trạng thái ban đầu.
      */
     private void clearFailAttempts(String email) {
-        redisService.delete(RedisKeyConstants.LOCK_COUNT + email);
         redisService.delete(RedisKeyConstants.SIGN_IN_LOCK + email);
         redisService.delete(RedisKeyConstants.LOCK_FOREVER + email);
     }

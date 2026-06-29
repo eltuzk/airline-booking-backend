@@ -8,10 +8,17 @@ public final class RedisKeyConstants {
     public static final String LOGIN_SESSION =
             "auth:login:session:";
 
-    public static final long SESSION_TIMEOUT_MINUTES = 30L;
+    /** Whitelist refresh token: auth:refresh:token:{userId} → jti */
+    public static final String REFRESH_TOKEN =
+            "auth:refresh:token:";
 
+    /** TTL (ngày) của refresh token, khớp với thời gian hết hạn JWT refresh. */
+    public static final long REFRESH_TOKEN_DAYS = 7L;
     public static final String FOGOT_PASSWORD_OTP =
-            "auth:forgot-password:otp";
+            "auth:forgot-password:otp:";
+
+    /** TTL (phút) của OTP quên mật khẩu. */
+    public static final long FORGOT_PASSWORD_OTP_MINUTES = 10L;
 
     public static final String SIGN_IN_LOCK =
             "auth:login:lock:user:";
@@ -22,6 +29,7 @@ public final class RedisKeyConstants {
     public static final String LOCK_FOREVER =
             "auth:login:lock-forever:user:";
 
+    public static final long SESSION_TIMEOUT_MINUTES = 30L;
     /** Số lần đăng nhập sai tối đa trước khi tài khoản bị khóa tạm thời. */
     public static final int MAX_FAIL_ATTEMPTS = 3;
 

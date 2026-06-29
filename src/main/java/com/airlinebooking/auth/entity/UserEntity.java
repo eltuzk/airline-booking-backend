@@ -5,7 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 @Data
 public class UserEntity {
     @Id
@@ -28,7 +29,10 @@ public class UserEntity {
     /** Thời điểm tài khoản bị khóa vĩnh viễn. */
     private LocalDateTime permanentlyLockedAt;
 
+
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private RoleEntity role;
+
 }

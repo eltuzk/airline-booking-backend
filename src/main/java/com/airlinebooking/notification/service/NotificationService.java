@@ -41,4 +41,12 @@ public class NotificationService {
         String body = AccountCreatedTemplate.build(fullName,passTemp);
         emailSender.send(email, "Đăng ký tài khoản thành công", body);
     }
+
+    public void sendForgotPasswordOtp(String email, String fullName, String otp) {
+        String body = "Xin chào " + fullName + ",\n\n"
+                + "Mã OTP đặt lại mật khẩu của bạn là: " + otp + "\n"
+                + "Mã có hiệu lực trong 10 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.\n\n"
+                + "Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.";
+        emailSender.send(email, "Đặt lại mật khẩu", body);
+    }
 }

@@ -68,7 +68,13 @@ public class KafkaConsumer {
                             email,
                             json.get("fullName").asText(),
                             json.get("password").asText()
-
+                    );
+                    break;
+                case "FORGOT_PASSWORD":
+                    notificationService.sendForgotPasswordOtp(
+                            email,
+                            json.get("fullName").asText(),
+                            json.get("otp").asText()
                     );
                     break;
 
