@@ -29,9 +29,11 @@ public class FlightServiceImp implements FlightService {
     @Override
     public List<FlightSearchResponse> searchFlights(FlightSearchRequest flightSearchRequest) {
         // kiểm tra trẻ sơ sinh có được đi không
+
         if (flightSearchRequest.getAdults() < 1) {
             throw new AppException(ErrorCode.INVALID_PASSENGER_RULE);
         }
+
         if (flightSearchRequest.getInfants() > flightSearchRequest.getAdults()) {
             throw new AppException(ErrorCode.ONE_ADULT_ONLY_ONE_INFANT);
         }

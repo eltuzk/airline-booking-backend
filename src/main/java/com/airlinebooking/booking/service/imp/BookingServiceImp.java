@@ -11,16 +11,22 @@ import com.airlinebooking.booking.repository.*;
 import com.airlinebooking.booking.service.BookingService;
 import com.airlinebooking.booking.service.FlightService;
 import com.airlinebooking.booking.service.RedisService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.swing.text.html.Option;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@AllArgsConstructor
+@Slf4j
 public class BookingServiceImp implements BookingService {
     private static final long TIME_TO_EXTEND_SEAT_LOCK = 15;
 
@@ -36,8 +42,8 @@ public class BookingServiceImp implements BookingService {
     @Autowired
     private TicketBaggageRepository ticketBaggageRepository;
 
-    @Autowired
-    private RedisService redisService;
+
+    private final RedisService redisService;
 
     @Autowired
     private FlightRepository flightRepository;
@@ -52,9 +58,12 @@ public class BookingServiceImp implements BookingService {
     private BookingMapper bookingMapper;
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public BookingResponse createBooking(BookingRequest bookingRequest, Integer userId) {
+        validateAndRollbackSeats(bookingRequest, userId);
+
+
         // gia hạn ghế trên redis
         extendSeatLock(bookingRequest);
 
@@ -71,11 +80,121 @@ public class BookingServiceImp implements BookingService {
         //xử lý thông tin hành khách (lưu thông tin hành khách xuống db + tính tổng tiền tất cả)
         BigDecimal totalAmoutAllPassenger = processAllPassenger(bookingRequest, bookingEntity, flightRunEntity, flightReturnEntity);
 
+        // set giá tiền
         bookingEntity.setTotalAmount(totalAmoutAllPassenger);
 
 
 
         return bookingMapper.toResponse(bookingRepository.save(bookingEntity)) ;
+    }
+
+    @Override
+    public void unlockSeatsByBookingId(Integer bookingId) {
+        Optional<BookingEntity> bookingEntityOptional = bookingRepository.findByIdWithTickets(bookingId);
+
+        if(!bookingEntityOptional.isPresent()){
+            throw  new AppException(ErrorCode.BOOKING_NOT_FOUND);
+        }
+
+        BookingEntity bookingEntity = bookingEntityOptional.get();
+
+        int unlockSeat = 0;
+
+        for(PassengerTicketEntity p : bookingEntity.getPassengerTicketEntityList()){
+            String seatNumber = p.getSeat().getSeatNumber();
+
+            boolean isUnlocked = redisService.unlockSeat(p.getSeat().getFlight().getFlightId(), bookingEntity.getUserId(), seatNumber);
+
+            if(isUnlocked){
+                ++unlockSeat;
+                log.info("Giải phóng ghế {} thành công", seatNumber);
+
+
+            }
+        }
+
+
+
+
+    }
+
+    @Override
+    public String getEmailByBookingId(Integer bookingId) {
+
+        Optional<String> email = bookingRepository.getContactEmailByBookingId(bookingId);
+        if(!email.isPresent()){
+            throw new AppException(ErrorCode.BOOKING_NOT_FOUND);// có thể sửa lại not found enail
+        }
+        return email.get();
+    }
+
+    @Override
+    public List<BookingResponse> getMyBookingsByUserId(Integer userId) {
+        List<BookingEntity> bookingEntityList = bookingRepository.getBookingEntitiesByUserId(userId);
+
+        List<BookingResponse> bookingResponseList = bookingMapper.toResponseList(bookingEntityList);
+
+
+        return bookingResponseList;
+    }
+
+
+     // Nếu có bất kỳ ghế nào hết hạn/không chính chủ -> Unlock TOÀN BỘ ghế trong request và báo lỗi
+    private void validateAndRollbackSeats(BookingRequest request, Integer userId) {
+
+        for (PassengerRequest pRequest : request.getPassengerRequestList()) {
+            if ("INFANT".equals(pRequest.getPassengerType())) continue; // Bỏ qua em bé
+
+            // 1. KIỂM TRA CHIỀU ĐI
+            String runSeat = pRequest.getRunSeatNumber();
+            if (runSeat != null && !runSeat.trim().isEmpty()) {
+                if (!redisService.isSeatHoldByCurrentUser(request.getRunFlightId(), userId, runSeat)) {
+
+                    log.warn("Lỗi ghế {} chiều đi. Đang Rollback toàn bộ request", runSeat);
+
+                    rollbackAllSeatsInRequest(request, userId); // Gọi hàm rollback toàn bộ
+                    throw new AppException(ErrorCode.SEAT_HOLD_EXPIRED_OR_INVALID);
+                }
+            }
+
+            // 2. KIỂM TRA CHIỀU VỀ (NẾU CÓ)
+            if (request.getReturnFlightId() != null) {
+                String returnSeat = pRequest.getReturnSeatNumber();
+
+                if (returnSeat != null && !returnSeat.trim().isEmpty()) {
+                    if (!redisService.isSeatHoldByCurrentUser(request.getReturnFlightId(), userId, returnSeat)) {
+                        log.warn("Lỗi ghế {} chiều về. Đang Rollback toàn bộ request", returnSeat);
+
+                        rollbackAllSeatsInRequest(request, userId); // Gọi hàm rollback toàn bộ
+
+
+                        throw new AppException(ErrorCode.SEAT_HOLD_EXPIRED_OR_INVALID);
+                    }
+                }
+            }
+        }
+    }
+
+
+    //Hàm dọn dẹp: Đơn giản là quét lại toàn bộ Request ban đầu và gọi lệnh Unlock
+
+    private void rollbackAllSeatsInRequest(BookingRequest request, Integer userId) {
+        for (PassengerRequest pRequest : request.getPassengerRequestList()) {
+            if ("INFANT".equals(pRequest.getPassengerType())) continue;
+
+            // Nhả ghế chiều đi
+            if(pRequest.getRunSeatNumber() != null) {
+                redisService.unlockSeat(request.getRunFlightId(), userId, pRequest.getRunSeatNumber());
+
+            }
+
+            // Nhả ghế chiều về (nếu có)
+            if((request.getReturnFlightId() != null) && (pRequest.getReturnSeatNumber() != null)) {
+                redisService.unlockSeat(request.getReturnFlightId(), userId, pRequest.getReturnSeatNumber());
+
+            }
+        }
+        log.info("ROLLBACK XONG: Đã dọn dẹp sạch sẽ các ghế của user {} trên Redis", userId);
     }
 
     // hàm gia hạn Redis, ở đây gia hạn 15p
@@ -203,7 +322,6 @@ public class BookingServiceImp implements BookingService {
         BaggageCatalogEntity baggageCatalog = null;
         if(baggageId != null){
             Optional<BaggageCatalogEntity> baggageCatalogEntity = baggageCatalogRepository.findById(baggageId);
-
             if(!baggageCatalogEntity.isPresent()){
                 throw new AppException(ErrorCode.BAGGAGE_NOT_FOUND);
             }

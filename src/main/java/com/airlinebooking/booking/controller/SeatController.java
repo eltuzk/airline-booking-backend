@@ -46,7 +46,9 @@ public class SeatController {
 
     @DeleteMapping("/unlock")
     public ResponseEntity<?> unlockSeat(@RequestBody LockSeatRequest lockSeatRequest){
+
         Integer currentUserId = 1;      // tạm thời set cứng id của khách hàng vì chưa làm xong
+
         boolean isUnlocked = redisService.unlockSeat(lockSeatRequest.getFlightId(), currentUserId, lockSeatRequest.getSeatNumber());
 
 

@@ -29,7 +29,7 @@ public class BaggageController {
 
 
         baseResponse.setCode(200);
-        baseResponse.setMessage("Đây là danh sách ghế");
+        baseResponse.setMessage("Đây là danh sách các hạng vé hành lý");
         baseResponse.setData(baggageResponseList);
         return ResponseEntity.ok(baseResponse);
 

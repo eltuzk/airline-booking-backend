@@ -6,10 +6,9 @@ import com.airlinebooking.booking.payload.response.BookingResponse;
 import com.airlinebooking.booking.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/bookings")
@@ -20,7 +19,7 @@ public class BookingController {
     @PostMapping("/create")
     public ResponseEntity<?> createBooking(@RequestBody BookingRequest request){
         //gán cứng userId = 1 trước đẻ test
-        Integer curUserId = 1;
+        Integer curUserId = 2;
 
 
         BaseResponse baseResponse = new BaseResponse();
@@ -30,6 +29,21 @@ public class BookingController {
         baseResponse.setCode(200);
         baseResponse.setMessage("Tạo booking thành công, mời thanh toán trong vòng 15p!!!");
         baseResponse.setData(bookingResponse);
+
+        return ResponseEntity.ok(baseResponse);
+    }
+
+    @GetMapping("/my-bookings")
+    public ResponseEntity<?> getMyBookings(){
+        Integer userId = 2;
+
+
+        List<BookingResponse> bookingResponseList = bookingService.getMyBookingsByUserId(userId);
+
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setCode(200);
+        baseResponse.setMessage("Đây là danh sách các booking của user này");
+        baseResponse.setData(bookingResponseList);
 
         return ResponseEntity.ok(baseResponse);
     }

@@ -10,7 +10,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.List;
 
-@Entity(name = "bookings")
+@Entity
+@Table(name = "bookings")
 @Getter
 @Setter
 @AllArgsConstructor

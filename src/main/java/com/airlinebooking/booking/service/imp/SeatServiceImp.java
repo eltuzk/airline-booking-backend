@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class SeatServiceImp implements SeatService {
 
-    private static final long HELD_STATIC_SEAT_MAP = 24;
+    private static final long HELD_STATIC_SEAT_MAP = 15;
 
     @Autowired
     private SeatRepository seatRepository;
@@ -43,7 +43,8 @@ public class SeatServiceImp implements SeatService {
     public List<SeatResponse> getSeatMap(Integer flightId) {
 
 
-
+        // 1: 5A CANCELLED --> HELD
+        // 2: 5A --> HELD
 
 
 
@@ -71,7 +72,7 @@ public class SeatServiceImp implements SeatService {
             }
 
         }
-
+        
 
 
 
@@ -101,6 +102,7 @@ public class SeatServiceImp implements SeatService {
 
             if(cachedData != null){
                 seatResponseList = objectMapper.readValue(cachedData, new TypeReference<List<SeatResponse>>() {});
+
                 System.out.println("TRÊN REDIS CÓ, LẤY TỪ ĐÓ XUỐNG");
             } else {
 
@@ -120,7 +122,7 @@ public class SeatServiceImp implements SeatService {
 
                 // lưu kết quả lên redis
                 String jsonToCache = objectMapper.writeValueAsString(seatResponseList);
-                stringRedisTemplate.opsForValue().set(staticSeatMapKeys, jsonToCache, HELD_STATIC_SEAT_MAP, TimeUnit.HOURS);
+                stringRedisTemplate.opsForValue().set(staticSeatMapKeys, jsonToCache, HELD_STATIC_SEAT_MAP, TimeUnit.MINUTES);
             }
         } catch (Exception e) {
             throw new AppException(ErrorCode.REDIS_OPERATION_FAILED);

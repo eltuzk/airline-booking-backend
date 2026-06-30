@@ -34,6 +34,7 @@ public class RedisServiceImp implements RedisService {
         String key = "booking:flight:" + flightId + ":seat:" + seatNumber;
         String value = String.valueOf(userId);
 
+
         // sau đó sẽ check và lưu trên redis, lưu thành công trả true (và trên redis sẽ lưu key và value), và ngược lại
         Boolean isLocked = redisTemplate.opsForValue().setIfAbsent(key, value, HOLD_TIME, TimeUnit.MINUTES);
 
