@@ -5,10 +5,10 @@ import com.airlinebooking.booking.exceptions.AppException;
 import com.airlinebooking.booking.exceptions.ErrorCode;
 import com.airlinebooking.booking.repository.BookingRepository;
 import com.airlinebooking.payment.config.VNPayConfig;
+import com.airlinebooking.payment.producer.PaymentKafkaProducer;
 import com.airlinebooking.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +18,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-
+@RequiredArgsConstructor
 public class PaymentServiceImp implements PaymentService {
 
-    @Autowired
-    private BookingRepository bookingRepository;
 
     // Dùng @Value để lôi các cấu hình từ application.yml vào biến
     @Value("${vnpay.tmnCode}")
@@ -36,6 +34,15 @@ public class PaymentServiceImp implements PaymentService {
 
     @Value("${vnpay.returnUrl}")
     private String vnpReturnUrl;
+
+
+
+
+    private final BookingRepository bookingRepository;
+
+
+
+    private final PaymentKafkaProducer paymentKafkaProducer;
 
     @Override
     public String createVnPayPaymentUrl(Integer bookingId, String ipAddress) {
@@ -248,9 +255,12 @@ public class PaymentServiceImp implements PaymentService {
             booking.setStatus("CONFIRMED");
             bookingRepository.save(booking);
 
-            // ==========================================
-            // TODO KAFKA NẰM Ở ĐÂY LÁT NỮA SẼ VIẾT
-            // ==========================================
+            //
+            // TODO KAFKA
+            //
+
+            // LÚC NÀY PHÁT ĐƯA CHO PRODUCER PHÁT THÔNG BÁO
+            paymentKafkaProducer.sendPaymentSuccessEvent(bookingId);
         }
     }
 

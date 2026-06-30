@@ -1,6 +1,9 @@
-package com.airlinebooking.payment.service;
+package com.airlinebooking.booking.consumer;
 
+import com.airlinebooking.booking.service.BookingService;
 import com.airlinebooking.booking.service.RedisService;
+import com.airlinebooking.notification.service.EmailService;
+import com.airlinebooking.payment.event.PaymentSuccessEvent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,20 +19,40 @@ public class BookingKafkaConsumerService {
 
     private final ObjectMapper objectMapper;
 
+    private final BookingService bookingService;
+
+    private final EmailService emailService;
+
     @KafkaListener(topics = "booking-payment-completed-topic", groupId = "airline-booking-group")
     public void listen(String message){
         log.info("KAFKA CONSUMER: Nhận được tin nhắn: {}", message);
 
+        try{
+            PaymentSuccessEvent event = objectMapper.readValue(message, PaymentSuccessEvent.class);
+
+            if(event.getBookingId() == null || !event.getStatus().equals("SUCCESS")){
+                log.warn("Tin nhắn không hợp lệ hoặc trạng thái không phải SUCCESS. Bỏ qua!");
+                return;
+            }
+
+            bookingService.unlockSeatsByBookingId(event.getBookingId());
+
+            // THIẾU XÓA STATIC_MAP TRÊN REDIS
 
 
-        //1. phân tích tin nắn để lấy bookignId
-        // Ở bước trước ta gửi {"bookingId":1,"status":"SUCCESS"}
-        Integer bookingId = extractBookingId(message);
+
+            String customerEmail = bookingService.getEmailByBookingId(event.getBookingId());
+            emailService.sendPaymentSuccessEmail("nguyenhuunhatm@gmail.com", event.getBookingId());
+
+            log.info("KAFKA CONSUMER: Xử lý thành công cho Booking ID: {}", event.getBookingId());
 
 
-        // tại đây xóa ghế trên redis
-        log.info("KAFKA CONSUMER: đang tiến hành xóa lock ghế cho bookingId: {}", bookingId);
-        redisService.unlockSeat()
+        } catch (Exception e){
+            log.error("KAFKA CONSUMER LỖI CRITICAL: Xử lý thất bại tin nhắn: {}", message, e);
+        }
+
+
+
 
     }
 
