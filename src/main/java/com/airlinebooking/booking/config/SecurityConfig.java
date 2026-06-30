@@ -24,6 +24,7 @@ public class SecurityConfig {
 
                     request.requestMatchers("/bookings/**").permitAll();
 
+                    request.requestMatchers("/payments/**").permitAll();
 
                     request.anyRequest().authenticated();
 

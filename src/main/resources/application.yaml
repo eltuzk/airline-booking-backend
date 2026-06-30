@@ -9,19 +9,43 @@ spring:
     redis:
       host: localhost
       port: 6379
+  kafka:
+    bootstrap-servers: localhost:9094
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+    consumer:
+      group-id: airline-booking-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: nguyenhuunhatminh426@gmail.com
+    password: remb hhsu csdf qilu
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 
 # VNPAY CONFIGURATION
 vnpay:
   # Mã website của bạn trên hệ thống VNPay (Terminal ID)
-  tmnCode: 2W3X4Y5Z
+  tmnCode: R3QI6URI
 
   # Chuỗi bí mật để ký bảo mật (Tuyệt đối không để lộ ra ngoài Frontend)
-  hashSecret: JJDKLSOENNDKCLSLDNEIWOQPXMMZNDJK
+  hashSecret: AI2836OAEK7KSGW8EU0SADA2PJ2K0X67
 
   # Đường dẫn API của VNPay để mình bắn request sang
   payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 
   # Đường link VNPay sẽ "đá" khách hàng về lại web của bạn sau khi quét mã QR xong
   # (Bạn sửa lại cổng 8080 nếu web của bạn chạy cổng khác nhé)
-  returnUrl: http://localhost:8080/api/payments/vnpay-return
+  returnUrl: http://localhost:8080/payments/vnpay-return
