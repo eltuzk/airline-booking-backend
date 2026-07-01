@@ -71,7 +71,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 RegisterCache.builder()
                         .firstName(newUser.getFirstName())
                         .lastName(newUser.getLastName())
-                        .fullName(newUser.getFirstName() + " " + newUser.getLastName())
+                        .fullName(newUser.getLastName()+ " " + newUser.getFirstName() )
                         .phone(newUser.getPhone())
                         .role("ROLE_USER")
                         .password(hashTempPassword)

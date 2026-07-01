@@ -19,8 +19,8 @@ public class UserEntity {
     private  String lastName;
     private String phoneNumber;
     private String avatarUrl;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+//    private LocalDateTime createdAt;
+//    private LocalDateTime updatedAt;
     private String status;
 
     /** Đặt thành true khi tài khoản bị khóa vĩnh viễn do đăng nhập sai nhiều lần liên tiếp. */
