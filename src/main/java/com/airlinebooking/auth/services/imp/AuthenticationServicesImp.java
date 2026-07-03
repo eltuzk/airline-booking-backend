@@ -23,16 +23,16 @@ import com.airlinebooking.common.exception.ErrorCode;
 import com.airlinebooking.common.exception.ResourceNotFoundException;
 import com.airlinebooking.common.util.JwtUtil;
 import com.airlinebooking.common.dto.LoginSessionCache;
+import com.airlinebooking.kafka.event.NotificationEvent;
+import com.airlinebooking.kafka.producer.KafkaProducer;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,7 +47,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String , Object> redisTemplate;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaProducer kafkaProducer;
     private final ObjectMapper objectMapper;
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
@@ -83,32 +83,12 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 Duration.ofMinutes(15)
         );
 
-        ObjectNode payload =
-                objectMapper.createObjectNode();
-        payload.put(
-                "type",
-                "REGISTER"
-        );
-
-        payload.put(
-                "email",
-                newUser.getEmail()
-        );
-
-        payload.put(
-                "fullName",
-                newUser.getFirstName() + " " + newUser.getLastName()
-        );
-
-        payload.put(
-                "password",
+        NotificationEvent registerEvent = NotificationEvent.register(
+                newUser.getEmail(),
+                newUser.getFirstName() + " " + newUser.getLastName(),
                 tempPassword
         );
-
-        kafkaTemplate.send(
-                "notification-topic",
-                payload.toString()
-        );
+        kafkaProducer.sendMessage(objectMapper.writeValueAsString(registerEvent));
 
 
 
@@ -368,12 +348,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         );
 
         // Gửi OTP qua Kafka → NotificationService → Email
-        ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("type", "FORGOT_PASSWORD");
-        payload.put("email", email);
-        payload.put("fullName", user.getFullName());
-        payload.put("otp", otp);
-        kafkaTemplate.send("notification-topic", payload.toString());
+        NotificationEvent forgotPassEvent = NotificationEvent.forgotPassword(email, user.getFullName(), otp);
+        kafkaProducer.sendMessage(objectMapper.writeValueAsString(forgotPassEvent));
 
         return ChangePassResponse.builder()
                 .message("Mã OTP đã được gửi đến email của bạn. Mã có hiệu lực trong 10 phút.")
