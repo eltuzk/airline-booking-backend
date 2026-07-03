@@ -44,4 +44,9 @@ public final class RedisKeyConstants {
 
     /** TTL (phút) cuộn cho key đếm số lần đăng nhập sai của mỗi lần thử. */
     public static final long FAIL_COUNT_TTL_MINUTES = 30L;
+
+    public static final String NOTIFICATION_PROCESSED_EVENT = "notification:processed:";
+    public static final long NOTIFICATION_PROCESSED_EVENT_HOURS = 24L;
+
 }
+
