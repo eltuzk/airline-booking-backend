@@ -1,5 +1,6 @@
 package com.airlinebooking.payment.producer;
 
+import com.airlinebooking.payment.event.PaymentSuccessEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +24,12 @@ public class PaymentKafkaProducer{
     private final ObjectMapper objectMapper;
 
 
-
-
-
-
-
     public void sendPaymentSuccessEvent(Integer bookingId) {
         try {
-            // Thay vì tạo Class mới, ta dùng Map cho lẹ
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("bookingId", bookingId);
-            eventData.put("status", "SUCCESS");
+            PaymentSuccessEvent paymentSuccessEvent = new PaymentSuccessEvent(bookingId, "SUCCESS");
 
             // Dùng để biến Map thành chuỗi JSON chuẩn
-            String jsonMessage = objectMapper.writeValueAsString(eventData);
+            String jsonMessage = objectMapper.writeValueAsString(paymentSuccessEvent);
 
             kafkaTemplate.send(PAYMENT_TOPIC, jsonMessage);
 
