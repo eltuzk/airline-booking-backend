@@ -13,6 +13,7 @@ public enum ErrorCode {
     SEAT_ALREADY_LOCKED(4002, "Ghế đã có người chọn hoặc đang bị khóa", HttpStatus.BAD_REQUEST),
     ONE_ADULT_ONLY_ONE_INFANT(4005, "Một người lớn chỉ được kèm 1 trẻ nhỏ", HttpStatus.BAD_REQUEST),
     SEAT_UNLOCK_FAILED(4006, "Không thể nhả ghế: Ghế đã hết hạn giữ chỗ hoặc bạn không có quyền nhả ghế này", HttpStatus.BAD_REQUEST),
+    VALIDATION_ERROR(4000, "Dữ liệu đầu vào không hợp lệ", HttpStatus.BAD_REQUEST),
 
 
     SEAT_NOT_FOUND(4003, "Không tìm thấy ghế trên hệ thống", HttpStatus.NOT_FOUND),
