@@ -1,6 +1,9 @@
 package com.airlinebooking.booking.repository;
 
 import com.airlinebooking.booking.entity.FlightEntity;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,13 +24,14 @@ public interface FlightRepository extends JpaRepository<FlightEntity, Integer> {
             f.availableSeats >= :seats AND 
             f.status = :status            
             """)
-    public List<FlightEntity> searchAvailableFlights(
+    public Page<FlightEntity> searchAvailableFlights(
             @Param("departrueCode") String departrueCode,
             @Param("arrivalCode") String arrivalCode,
             @Param("start")LocalDateTime startOfDay,
             @Param("end") LocalDateTime endOfDay,
             @Param("seats") Integer requiredSeats,
-            @Param("status") String status
+            @Param("status") String status,
+            Pageable pageable
 
             );
 }

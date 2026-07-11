@@ -6,10 +6,13 @@ import com.airlinebooking.booking.exceptions.ErrorCode;
 import com.airlinebooking.booking.mapper.FlightMapper;
 import com.airlinebooking.booking.payload.request.FlightSearchRequest;
 import com.airlinebooking.booking.payload.response.FlightSearchResponse;
+import com.airlinebooking.booking.payload.response.PageResponse;
 import com.airlinebooking.booking.repository.FlightRepository;
 import com.airlinebooking.booking.service.FlightService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -27,7 +30,7 @@ public class FlightServiceImp implements FlightService {
     private FlightMapper flightMapper;
 
     @Override
-    public List<FlightSearchResponse> searchFlights(FlightSearchRequest flightSearchRequest) {
+    public PageResponse<FlightSearchResponse> searchFlights(FlightSearchRequest flightSearchRequest, Pageable pageable) {
         // kiểm tra trẻ sơ sinh có được đi không
 
         if (flightSearchRequest.getAdults() < 1) {
@@ -43,21 +46,22 @@ public class FlightServiceImp implements FlightService {
 
 
         // tìm danh sách
-        List<FlightEntity> flightEntityList = flightRepository.searchAvailableFlights(
+        Page<FlightEntity> pageData = flightRepository.searchAvailableFlights(
                 flightSearchRequest.getDepartureCode(),
                 flightSearchRequest.getArrivalCode(),
                 flightSearchRequest.getDate().atStartOfDay(),
                 flightSearchRequest.getDate().atTime(LocalTime.MAX),
                 countSeats,
-                NEED_SEARCH);
+                NEED_SEARCH,
+                pageable);
 
         // mappper sang
-        List<FlightSearchResponse> flightSearchResponseList = flightMapper.toSearchResponseList(flightEntityList);
+        List<FlightSearchResponse> flightSearchResponseList = flightMapper.toSearchResponseList(pageData.getContent());
 
 
 
 
 
-        return flightSearchResponseList;
+        return PageResponse.of(pageData, flightSearchResponseList);
     }
 }
