@@ -4,6 +4,7 @@ import com.airlinebooking.booking.payload.request.BookingRequest;
 import com.airlinebooking.booking.payload.response.BaseResponse;
 import com.airlinebooking.booking.payload.response.BookingResponse;
 import com.airlinebooking.booking.service.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class BookingController {
     private BookingService bookingService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createBooking(@RequestBody BookingRequest request){
+    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest request){
         //gán cứng userId = 1 trước đẻ test
         Integer curUserId = 2;
 

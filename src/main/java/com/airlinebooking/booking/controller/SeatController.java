@@ -7,6 +7,7 @@ import com.airlinebooking.booking.payload.response.BaseResponse;
 import com.airlinebooking.booking.payload.response.SeatResponse;
 import com.airlinebooking.booking.service.RedisService;
 import com.airlinebooking.booking.service.SeatService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class SeatController {
     private SeatService seatService;
 
     @PostMapping("/lock")
-    public ResponseEntity<?> lockSeat(@RequestBody LockSeatRequest lockSeatRequest){
+    public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest lockSeatRequest){
         Integer currentUserId = 1;      // tạm thời set cứng id của khách hàng vì chưa làm xong
         boolean isLocked = redisService.lockSeat(lockSeatRequest.getFlightId(), currentUserId, lockSeatRequest.getSeatNumber());
 
@@ -45,7 +46,7 @@ public class SeatController {
 
 
     @DeleteMapping("/unlock")
-    public ResponseEntity<?> unlockSeat(@RequestBody LockSeatRequest lockSeatRequest){
+    public ResponseEntity<?> unlockSeat(@Valid @RequestBody LockSeatRequest lockSeatRequest){
 
         Integer currentUserId = 1;      // tạm thời set cứng id của khách hàng vì chưa làm xong
 
@@ -67,7 +68,7 @@ public class SeatController {
     }
 
     @GetMapping("/flight/{flightId}")
-    public ResponseEntity<?> getSeatMap(@PathVariable Integer flightId){
+    public ResponseEntity<?> getSeatMap(@Valid @PathVariable Integer flightId){
         BaseResponse baseResponse = new BaseResponse();
 
         List<SeatResponse> seatResponseList = new ArrayList<>();
